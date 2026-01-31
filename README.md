@@ -1,6 +1,6 @@
-# Axum API with MySQL
+# Axum URL Shortener
 
-A REST API built with Rust, Axum web framework, and MySQL database using SeaORM.
+A URL shortening service built with Rust, Axum web framework, and MySQL database using SeaORM. Convert long URLs into short, easy-to-share links.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Make sure MySQL is running on your system.
 ### 2. Create Database
 
 ```sql
-CREATE DATABASE axum_db;
+CREATE DATABASE url_shortener_db;
 ```
 
 ### 3. Configure Environment Variables
@@ -25,7 +25,7 @@ CREATE DATABASE axum_db;
 Copy the `.env.example` file to `.env` and update with your MySQL credentials:
 
 ```env
-DATABASE_URL=mysql://username:password@localhost:3306/axum_db
+DATABASE_URL=mysql://username:password@localhost:3306/url_shortener_db
 SERVER_HOST=127.0.0.1
 SERVER_PORT=3000
 RUST_LOG=debug,tower_http=debug,axum=debug
@@ -63,17 +63,42 @@ GET http://127.0.0.1:3000/
 
 Returns a welcome message.
 
-### Create User (Example)
+### Shorten URL
 
 ```bash
-POST http://127.0.0.1:3000/users
+POST http://127.0.0.1:3000/shorten
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "john@example.com"
+  "url": "https://www.example.com/very/long/url/that/needs/shortening"
 }
 ```
+
+Response:
+
+```json
+{
+  "short_code": "abc123",
+  "short_url": "http://127.0.0.1:3000/abc123",
+  "original_url": "https://www.example.com/very/long/url/that/needs/shortening"
+}
+```
+
+### Redirect to Original URL
+
+```bash
+GET http://127.0.0.1:3000/{short_code}
+```
+
+Redirects to the original URL associated with the short code.
+
+### Get URL Statistics (Optional)
+
+```bash
+GET http://127.0.0.1:3000/stats/{short_code}
+```
+
+Returns statistics for a shortened URL (clicks, creation date, etc.).
 
 ## Tech Stack
 
@@ -115,11 +140,28 @@ src/
   └── entities/        # Generated SeaORM entities (after migration)
 ```
 
-## Next Steps
+## Features
 
-1. Create database migrations for your tables
-2. Generate entities using SeaORM CLI
-3. Implement CRUD operations
-4. Add authentication/authorization
-5. Add input validation
-6. Implement error handling middleware
+- ✅ Shorten long URLs into compact codes
+- ✅ Redirect short URLs to original destinations
+- ✅ RESTful API design
+- ✅ MySQL database with SeaORM
+- ✅ Async/await with Tokio
+- 🚧 URL statistics tracking (planned)
+- 🚧 Custom short codes (planned)
+- 🚧 Rate limiting (planned)
+- 🚧 URL expiration (planned)
+
+## Database Schema
+
+The application uses a `urls` table with the following structure:
+
+```sql
+CREATE TABLE urls (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  short_code VARCHAR(10) UNIQUE NOT NULL,
+  original_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  clicks INT DEFAULT 0
+);
+```
