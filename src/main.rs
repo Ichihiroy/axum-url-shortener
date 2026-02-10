@@ -27,8 +27,18 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("Failed to ping database");
 
+    // Ensure database schema exists
+    database::ensure_schema(&db)
+        .await
+        .expect("Failed to initialize schema");
+
+    // Build base URL used in responses
+    let host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port = std::env::var("SERVER_PORT").unwrap_or_else(|_| "3000".to_string());
+    let base_url = format!("http://{}:{}", host, port);
+
     // Create application state
-    let state = Arc::new(routes::AppState { db });
+    let state = Arc::new(routes::AppState { db, base_url });
 
     // Build our application with routes
     let app = routes::create_router(state)

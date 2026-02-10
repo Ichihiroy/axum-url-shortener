@@ -1,28 +1,28 @@
-# Axum URL Shortener
+# Axum URL Shortener — Tutorial-Style
 
-A URL shortening service built with Rust, Axum web framework, and MySQL database using SeaORM. Convert long URLs into short, easy-to-share links.
+This project is a beginner-friendly URL shortener built with Rust, Axum, and MySQL. It focuses on the essentials: create a short link, redirect to the original URL, and fetch basic stats.
+
+## What you will build
+
+- POST /shorten to create a short link
+- GET /{short_code} to redirect
+- GET /stats/{short_code} to view clicks and created time
+- GET /health to verify the database connection
 
 ## Prerequisites
 
-- Rust (latest stable version)
+- Rust (latest stable)
 - MySQL Server
-- Cargo
 
-## Setup Instructions
-
-### 1. Install MySQL Server
-
-Make sure MySQL is running on your system.
-
-### 2. Create Database
+## Step 1: Create the database
 
 ```sql
 CREATE DATABASE url_shortener_db;
 ```
 
-### 3. Configure Environment Variables
+## Step 2: Configure environment variables
 
-Copy the `.env.example` file to `.env` and update with your MySQL credentials:
+Create a .env file in the project root:
 
 ```env
 DATABASE_URL=mysql://username:password@localhost:3306/url_shortener_db
@@ -31,39 +31,24 @@ SERVER_PORT=3000
 RUST_LOG=debug,tower_http=debug,axum=debug
 ```
 
-### 4. Install Dependencies
+## Step 3: Build and run
 
 ```bash
 cargo build
-```
-
-### 5. Run the Server
-
-```bash
 cargo run
 ```
 
-The server will start on `http://127.0.0.1:3000`
+Server starts at http://127.0.0.1:3000
 
-## Available Endpoints
+## Step 4: Try the API
 
-### Health Check
+### Health check
 
 ```bash
 GET http://127.0.0.1:3000/health
 ```
 
-Returns the API status and database connection status.
-
-### Root
-
-```bash
-GET http://127.0.0.1:3000/
-```
-
-Returns a welcome message.
-
-### Shorten URL
+### Create a short URL
 
 ```bash
 POST http://127.0.0.1:3000/shorten
@@ -74,87 +59,48 @@ Content-Type: application/json
 }
 ```
 
-Response:
+Response example:
 
 ```json
 {
-  "short_code": "abc123",
-  "short_url": "http://127.0.0.1:3000/abc123",
+  "short_code": "abc1234",
+  "short_url": "http://127.0.0.1:3000/abc1234",
   "original_url": "https://www.example.com/very/long/url/that/needs/shortening"
 }
 ```
 
-### Redirect to Original URL
+### Redirect
 
 ```bash
 GET http://127.0.0.1:3000/{short_code}
 ```
 
-Redirects to the original URL associated with the short code.
-
-### Get URL Statistics (Optional)
+### Stats
 
 ```bash
 GET http://127.0.0.1:3000/stats/{short_code}
 ```
 
-Returns statistics for a shortened URL (clicks, creation date, etc.).
+Response example:
 
-## Tech Stack
-
-- **Axum** - Web framework
-- **SeaORM** - ORM for database operations
-- **MySQL** - Database
-- **Tokio** - Async runtime
-- **Tower-HTTP** - Middleware (CORS, Tracing)
-- **Serde** - Serialization/Deserialization
-
-## Using SeaORM CLI
-
-Generate entities from your database:
-
-```bash
-sea-orm-cli generate entity -o src/entities
+```json
+{
+  "short_code": "abc1234",
+  "original_url": "https://www.example.com/very/long/url/that/needs/shortening",
+  "clicks": 3,
+  "created_at": "2026-02-10T18:23:45"
+}
 ```
 
-Create migrations:
+## How it works (quick tour)
 
-```bash
-sea-orm-cli migrate init
-sea-orm-cli migrate generate create_users_table
-```
+1. main.rs starts the server and prepares shared state.
+2. database.rs connects to MySQL and ensures the urls table exists.
+3. routes.rs defines the handlers and SQL queries.
 
-Run migrations:
+## Database schema
 
-```bash
-sea-orm-cli migrate up
-```
-
-## Project Structure
-
-```
-src/
-  ├── main.rs          # Application entry point
-  ├── database.rs      # Database connection setup
-  ├── routes.rs        # API routes and handlers
-  └── entities/        # Generated SeaORM entities (after migration)
-```
-
-## Features
-
-- ✅ Shorten long URLs into compact codes
-- ✅ Redirect short URLs to original destinations
-- ✅ RESTful API design
-- ✅ MySQL database with SeaORM
-- ✅ Async/await with Tokio
-- 🚧 URL statistics tracking (planned)
-- 🚧 Custom short codes (planned)
-- 🚧 Rate limiting (planned)
-- 🚧 URL expiration (planned)
-
-## Database Schema
-
-The application uses a `urls` table with the following structure:
+The app creates this table automatically if it does not exist:
 
 ```sql
 CREATE TABLE urls (
